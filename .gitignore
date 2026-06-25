@@ -1,0 +1,19 @@
+# Windows thumbnail cache
+Thumbs.db
+
+# Windows explorer
+Desktop.ini
+
+# Log files
+*.log
+
+# Temp files
+*.tmp
+~$*
+
+# HTML reports (generated at runtime)
+*_Report.html
+
+# Screenshots source files (keep folder structure, ignore source files)
+screenshots/*.psd
+screenshots/*.xcf

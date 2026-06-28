@@ -1,0 +1,12 @@
+{
+  "version": "2.1.0",
+  "report": {
+    "output_path": "C:\\Users\\Public\\Desktop",
+    "filename": "KBU_Inventory_Report",
+    "auto_open": true
+  },
+  "server": {
+    "port": 58080,
+    "refresh_interval": 30
+  }
+}

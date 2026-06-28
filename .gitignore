@@ -14,6 +14,10 @@ Desktop.ini
 # HTML reports (generated at runtime)
 *_Report.html
 
+# JSON reports (generated at runtime)
+*_Report.json
+inventory.json
+
 # Screenshots source files (keep folder structure, ignore source files)
 screenshots/*.psd
 screenshots/*.xcf

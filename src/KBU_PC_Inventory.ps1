@@ -1,4 +1,4 @@
-﻿﻿﻿<#
+﻿<#
 .SYNOPSIS
     KBU PC Inventory Tool
     Automated hardware, OS, network, security and health information collector.
@@ -12,7 +12,7 @@
     anything on the system.
 
 .NOTES
-    Version:      1.0.0
+    Version:      2.1.0
     Author:       KBU IT Department
     Created:      2026-06-25
     License:      MIT
@@ -45,16 +45,79 @@ $EmojiMicroscope = [char]::ConvertFromUtf32(0x1F52C) # Microscope
 $EmojiPlug      = [char]::ConvertFromUtf32(0x1F50C) # Electric Plug
 
 # ============================================================================
+# REGION: Configuration Loading
+# ============================================================================
+
+$Script:ConfigPath = Join-Path -Path $PSScriptRoot -ChildPath "..\config.json"
+$Script:Config = $null
+
+if (Test-Path $Script:ConfigPath) {
+    try {
+        $Script:Config = Get-Content $Script:ConfigPath -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+        Write-Host "  [$([char]0x2713)] Configuration loaded from config.json" -ForegroundColor DarkGray
+    }
+    catch {
+        Write-Host "  [$([char]0x26A0)] WARNING: Could not parse config.json, using default values." -ForegroundColor Yellow
+        $Script:Config = $null
+    }
+}
+else {
+    Write-Host "  [$([char]0x26A0)] WARNING: config.json not found at $Script:ConfigPath, using default values." -ForegroundColor Yellow
+}
+
+# ============================================================================
 # REGION: Global Configuration & Variables
 # ============================================================================
 
-# Get Desktop path with fallback for reliability
-$Script:DesktopPath = if ([Environment]::GetFolderPath("Desktop")) {
-    [Environment]::GetFolderPath("Desktop")
+# Default values
+$Script:DefaultOutputPath = "C:\Users\Public\Desktop"
+$Script:DefaultFilename  = "KBU_Inventory_Report"
+$Script:DefaultPort      = 58080
+
+# Resolve output path from config or use default
+$Script:OutputPath = if ($Script:Config -and $Script:Config.report -and $Script:Config.report.output_path) {
+    $Script:Config.report.output_path
 } else {
-    Join-Path -Path $env:USERPROFILE -ChildPath "Desktop"
+    $Script:DefaultOutputPath
 }
-$Script:ReportPath = Join-Path -Path $Script:DesktopPath -ChildPath "KBU_PC_Inventory_Report.html"
+$Script:ReportFilename = if ($Script:Config -and $Script:Config.report -and $Script:Config.report.filename) {
+    $Script:Config.report.filename
+} else {
+    $Script:DefaultFilename
+}
+$Script:AutoOpen = if ($Script:Config -and $Script:Config.report -and ($null -ne $Script:Config.report.auto_open)) {
+    $Script:Config.report.auto_open
+} else {
+    $true
+}
+$Script:ServerPort = if ($Script:Config -and $Script:Config.server -and $Script:Config.server.port) {
+    $Script:Config.server.port
+} else {
+    $Script:DefaultPort
+}
+$Script:ToolVersion = if ($Script:Config -and $Script:Config.version) {
+    $Script:Config.version
+} else {
+    "2.1.0"
+}
+
+# Ensure output directory exists
+if (-not (Test-Path $Script:OutputPath)) {
+    try {
+        New-Item -ItemType Directory -Path $Script:OutputPath -Force -ErrorAction Stop | Out-Null
+    }
+    catch {
+        Write-Host "  [$([char]0x26A0)] WARNING: Could not create output path $Script:OutputPath, falling back to Desktop." -ForegroundColor Yellow
+        $Script:OutputPath = if ([Environment]::GetFolderPath("Desktop")) {
+            [Environment]::GetFolderPath("Desktop")
+        } else {
+            Join-Path -Path $env:USERPROFILE -ChildPath "Desktop"
+        }
+    }
+}
+
+$Script:ReportPath = Join-Path -Path $Script:OutputPath -ChildPath "$($Script:ReportFilename).html"
+$Script:JsonReportPath = Join-Path -Path $Script:OutputPath -ChildPath "$($Script:ReportFilename).json"
 $Script:CurrentUser = [System.Environment]::UserName
 $Script:ComputerName = [System.Environment]::MachineName
 $Script:ScanDate = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
@@ -1223,7 +1286,7 @@ function Build-HtmlReport {
 
     <!-- ===== FOOTER ===== -->
     <div class="footer">
-        <p>KBU PC Inventory Tool v1.0.0 &nbsp;|&nbsp; Karabuk University IT Department</p>
+        <p>KBU PC Inventory Tool v$Script:ToolVersion &nbsp;|&nbsp; Karabuk University IT Department</p>
         <p>Generated on <span id="scanTimestamp">$Script:ScanDate</span> &nbsp;|&nbsp; This tool is READ-ONLY -- No system modifications were made.</p>
     </div>
 
@@ -1275,6 +1338,57 @@ function Build-HtmlReport {
 }
 
 # ============================================================================
+# REGION: JSON Export
+# ============================================================================
+
+<#
+.SYNOPSIS
+    Exports inventory data as structured JSON for integration with other tools.
+#>
+function Export-InventoryJson {
+    param(
+        $SystemInfo,
+        $CPUInfo,
+        $RAMInfo,
+        $GPUList,
+        $DiskList,
+        $Motherboard,
+        $BIOSInfo,
+        $NetworkInfo,
+        $BatteryInfo,
+        $SecurityInfo
+    )
+
+    $inventoryData = [PSCustomObject]@{
+        metadata = [PSCustomObject]@{
+            tool_version   = $Script:ToolVersion
+            scan_date      = $Script:ScanDate
+            computer_name  = $Script:ComputerName
+            current_user   = $Script:CurrentUser
+        }
+        system = $SystemInfo
+        cpu    = $CPUInfo
+        ram    = $RAMInfo
+        gpu    = $GPUList
+        disk   = $DiskList
+        motherboard = $Motherboard
+        bios   = $BIOSInfo
+        network = $NetworkInfo
+        battery = $BatteryInfo
+        security = $SecurityInfo
+    }
+
+    try {
+        $jsonContent = $inventoryData | ConvertTo-Json -Depth 10
+        $jsonContent | Out-File -FilePath $Script:JsonReportPath -Encoding UTF8 -Force
+        Write-Host "  $([char]0x2713) JSON report saved to $Script:JsonReportPath" -ForegroundColor Green
+    }
+    catch {
+        Write-Host "  [$([char]0x26A0)] WARNING: Could not save JSON report: $($_.Exception.Message)" -ForegroundColor Yellow
+    }
+}
+
+# ============================================================================
 # REGION: HTTP Server (Live Refresh Mode)
 # ============================================================================
 
@@ -1295,7 +1409,8 @@ function Start-KBUHttpServer {
 
     $port = 0
     $url = ""
-    for ($p = 58080; $p -le 58089; $p++) {
+    $startPort = $Script:ServerPort
+    for ($p = $startPort; $p -le ($startPort + 9); $p++) {
         try {
             $testUrl = "http://localhost:$p/"
             $testListener = New-Object System.Net.HttpListener
@@ -1308,7 +1423,7 @@ function Start-KBUHttpServer {
         } catch { }
     }
     if ($port -eq 0) {
-        Write-Host "  [X] Could not find an available port (58080-58089)." -ForegroundColor Red
+        Write-Host "  [X] Could not find an available port ($startPort-$($startPort+9))." -ForegroundColor Red
         Write-Host "  Please close other instances and try again." -ForegroundColor Red
         return
     }
@@ -1324,8 +1439,10 @@ function Start-KBUHttpServer {
     Write-Host "  Use $([char]::ConvertFromUtf32(0x1F504)) Refresh button in browser to re-scan" -ForegroundColor DarkGray
     Write-Host "  Press Ctrl+C or close this window to stop" -ForegroundColor DarkGray
     Write-Host ""
-    Write-Host "  [!] Opening browser..." -ForegroundColor Gray
-    Start-Process -FilePath $url
+    if ($Script:AutoOpen) {
+        Write-Host "  [!] Opening browser..." -ForegroundColor Gray
+        Start-Process -FilePath $url
+    }
 
     $serverRunning = $true
     $currentHtml = $InitialHtml
@@ -1407,7 +1524,7 @@ function Main {
            | |  | ||  \| || || \   ||   /| (_) \ V /| (_) | |              
            |_|  |_||_|\__||_||_|\_||_|_\ \___/ \_/  \___/|_|              
       
-           KBU PC Inventory Tool v1.0.0
+           KBU PC Inventory Tool v$Script:ToolVersion
            Karabuk University IT Department
       
     ==========================================================
@@ -1438,10 +1555,10 @@ function Main {
     $batteryInfo  = Get-BatteryInformation
     $securityInfo = Get-SecurityInformation
 
-    # ---------- Phase 2: Generate HTML Report ----------
+    # ---------- Phase 2: Generate Reports ----------
     Write-Host ""
     Write-Host "  +-----------------------------------------+" -ForegroundColor DarkCyan
-    Write-Host "  |   PHASE 2: Generating HTML Report       |" -ForegroundColor DarkCyan
+    Write-Host "  |   PHASE 2: Generating Reports           |" -ForegroundColor DarkCyan
     Write-Host "  +-----------------------------------------+" -ForegroundColor DarkCyan
     Write-Host ""
 
@@ -1457,15 +1574,10 @@ function Main {
         -BIOSInfo      $biosInfo `
         -NetworkInfo   $networkInfo `
         -BatteryInfo   $batteryInfo `
-        -SecurityInfo  $sec
-    # ---------- Phase 3: Start Live Server with Refresh ----------
-    Write-Host "  +-----------------------------------------+" -ForegroundColor DarkCyan
-    Write-Host "  |   PHASE 3: Live Server Mode             |" -ForegroundColor DarkCyan
-    Write-Host "  +-----------------------------------------+" -ForegroundColor DarkCyan
+        -SecurityInfo  $securityInfo
 
-    Write-Host "  $([char]0x2192) Building initial HTML report..." -ForegroundColor Cyan
-
-    $htmlReport = Build-HtmlReport `
+    Write-Host "  [$([char]0x2192)] Exporting JSON report..." -ForegroundColor Cyan
+    Export-InventoryJson `
         -SystemInfo    $systemInfo `
         -CPUInfo       $cpuInfo `
         -RAMInfo       $ramInfo `
@@ -1477,11 +1589,20 @@ function Main {
         -BatteryInfo   $batteryInfo `
         -SecurityInfo  $securityInfo
 
-    # Also save to Desktop
+    # Save HTML report to disk
     try {
         $htmlReport | Out-File -FilePath $Script:ReportPath -Encoding UTF8 -Force
-        Write-Host "  $([char]0x2713) Report also saved to Desktop." -ForegroundColor Green
-    } catch { }
+        Write-Host "  $([char]0x2713) HTML report saved to $Script:ReportPath" -ForegroundColor Green
+    }
+    catch {
+        Write-Host "  [$([char]0x26A0)] WARNING: Could not save HTML report to $Script:ReportPath" -ForegroundColor Yellow
+    }
+
+    # ---------- Phase 3: Start Live Server with Refresh ----------
+    Write-Host ""
+    Write-Host "  +-----------------------------------------+" -ForegroundColor DarkCyan
+    Write-Host "  |   PHASE 3: Live Server Mode             |" -ForegroundColor DarkCyan
+    Write-Host "  +-----------------------------------------+" -ForegroundColor DarkCyan
 
     # Launch HTTP server (blocking -- keeps running until window is closed)
     Start-KBUHttpServer `

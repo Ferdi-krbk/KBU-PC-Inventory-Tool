@@ -1619,17 +1619,19 @@ function Main {
         -InitialHtml   $htmlReport
 
     # ---------- Phase 4: Open in Browser ----------
-    Write-Host "  [$([char]0x2192)] Opening report in default browser..." -ForegroundColor Cyan
-    try {
-        Start-Process -FilePath $Script:ReportPath -ErrorAction Stop
-        Write-Host "  [$([char]0x2713)] Browser launched." -ForegroundColor Green
-        Write-Host ""
-    }
-    catch {
-        Write-Host "  [!] Could not open browser automatically." -ForegroundColor Yellow
-        Write-Host "       Please open the file manually:" -ForegroundColor Yellow
-        Write-Host "       $Script:ReportPath" -ForegroundColor Yellow
-        Write-Host ""
+    if ($Script:AutoOpen) {
+        Write-Host "  [$([char]0x2192)] Opening report in default browser..." -ForegroundColor Cyan
+        try {
+            Start-Process -FilePath $Script:ReportPath -ErrorAction Stop
+            Write-Host "  [$([char]0x2713)] Browser launched." -ForegroundColor Green
+            Write-Host ""
+        }
+        catch {
+            Write-Host "  [!] Could not open browser automatically." -ForegroundColor Yellow
+            Write-Host "       Please open the file manually:" -ForegroundColor Yellow
+            Write-Host "       $Script:ReportPath" -ForegroundColor Yellow
+            Write-Host ""
+        }
     }
 
     # ---------- Summary Output ----------

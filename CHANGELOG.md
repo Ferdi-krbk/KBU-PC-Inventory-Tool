@@ -2,53 +2,56 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [2.1.0] - 2026-07-01
 
 ### Added
-- `config.json` for externalized configuration (output path, port, filename, auto-open)
-- JSON export alongside HTML report via `Export-InventoryJson` function
-- Pester tests for hardware data collection and configuration validation
-- Architecture documentation in `docs/architecture.md`
-- Organized project structure with `src/`, `docs/`, `tests/` directories
+- `run_inventory.bat` — double-click batch launcher for non-technical users
+- `config.json` — externalized runtime configuration (output path, port, filename, auto-open)
+- JSON export (`Export-InventoryJson`) — structured machine-readable output alongside HTML
+- Pester test suite — 30+ tests covering config parsing, hardware collection, and JSON structure
+- Architecture documentation — detailed layer breakdown in `docs/architecture.md`
 
 ### Changed
-- Main script moved to `src/KBU_PC_Inventory.ps1`
+- Main script moved into `src/KBU_PC_Inventory.ps1` for clean project structure
 - Report output path configurable via `config.json` (default: `C:\Users\Public\Desktop`)
-- HTTP server port configurable via `config.json` (default: 58080)
-- Version number sourced from `config.json`
-- Auto-open browser behavior respects `auto_open` setting
+- HTTP server start port configurable via `config.json` (default: 58080)
+- Tool version sourced from `config.json` (displayed in HTML footer and console header)
+- Browser auto-open controlled by `report.auto_open` setting
 
 ### Fixed
-- Corrected variable reference `$sec` to `$securityInfo` in main execution
-- Removed duplicate `Build-HtmlReport` call
+- Variable reference `$sec` corrected to `$securityInfo` in main execution flow
+- Removed duplicate `Build-HtmlReport` invocation that generated the report twice
+- Phase 4 browser launch now respects `auto_open` configuration
 
 ## [2.0.0] - 2026-06-28
 
 ### Added
-- Live refresh feature via HTTP server
-- Refresh button in HTML dashboard with XHR-based re-scan
-- GPU information collection (`Get-GPUInformation`)
-- Security section (Defender status, Firewall, Windows Activation)
-- Battery information for laptops
-- Network adapter details (MAC, IPv4, Gateway, DNS, Link Speed)
-- Toast notifications in browser UI
-- Responsive CSS grid layout
-- Print-friendly stylesheet
+- Live HTTP server with browser-based dashboard
+- XHR-based refresh button — re-scan without restarting the tool
+- GPU information collection (dedicated + integrated)
+- Security section (Windows Defender status, Firewall profiles, Windows activation)
+- Battery information for laptops (charge percentage, power state)
+- Network adapter details (MAC address, IPv4, default gateway, DNS servers, link speed)
+- Toast notification system in the browser UI
+- Responsive CSS grid layout (adapts to mobile and tablet screens)
+- Print-optimized stylesheet
 
 ### Changed
-- Migrated from static file output to live HTTP server mode
-- Upgraded HTML dashboard to modern dark theme design
-- Improved error handling with `Invoke-SafeQuery` wrapper
-- Extended status badge system
+- Transitioned from static HTML file output to live server mode
+- Upgraded HTML dashboard to dark theme with cyan accent design (`#0f1923` / `#00b4d8`)
+- All data collection wrapped in `Invoke-SafeQuery` with `"Not Available"` fallback
+- Extended status badge system (green/yellow/red pills)
 
 ## [1.0.0] - 2026-06-25
 
 ### Initial Release
-- Hardware inventory collection (CPU, RAM, Disk)
-- Operating system information (edition, version, build, uptime)
+- CPU, RAM, and disk hardware inventory collection
+- Operating system information (edition, version, build number, architecture, uptime)
 - Motherboard and BIOS information
 - Network adapter detection
-- HTML report generation with embedded CSS
-- Read-only operation guarantee
+- Self-contained HTML report with embedded CSS
+- Read-only guarantee — zero system modifications
+- Released under MIT License

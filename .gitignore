@@ -16,6 +16,10 @@ Desktop.ini
 
 # JSON reports (generated at runtime)
 *_Report.json
+
+# Generated inventory files (specific names)
+KBU_Inventory_Report.html
+KBU_Inventory_Report.json
 inventory.json
 
 # Screenshots source files (keep folder structure, ignore source files)

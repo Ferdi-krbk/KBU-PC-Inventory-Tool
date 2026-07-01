@@ -1512,30 +1512,15 @@ function Main {
     Clear-Host
 
     # ASCII art header
-    Write-Host @"
-
-    ==========================================================
-          ___  ___ __  __     ___  ___     ___                          
-         |  / | __ |  |  |   | __|| _ \   |_ _| _ __  __ ___ __         
-         | ' /| __ ||  |  |__ | __||  _/    | | | '  \/ _| \ \/         
-         | . \| || ||  |  | || ||_ || |      | | | || | ( | |>  <          
-         |_|\_||_||_||_ |_| \_||___||_|  _ |___||_||_|\__|_/_/\_\         
-         |_   _|| || \ | || || \| || _ \ / _ \ \ / / _ \| '__|            
-           | |  | ||  \| || || \   ||   /| (_) \ V /| (_) | |              
-           |_|  |_||_|\__||_||_|\_||_|_\ \___/ \_/  \___/|_|              
-      
-           KBU PC Inventory Tool v$Script:ToolVersion
-           Karabuk University IT Department
-      
-    ==========================================================
-
-    [!] This tool is READ-ONLY -- No system modifications are made.
-
-"@ -ForegroundColor Cyan
-
-    Write-Host "  " -NoNewline
-    Write-Host "[!]" -ForegroundColor Gray -NoNewline
-    Write-Host " This tool is READ-ONLY -- No system modifications are made." -ForegroundColor Gray
+    Write-Host "  +=============================================================+" -ForegroundColor Cyan
+    Write-Host "  |                                                             |" -ForegroundColor Cyan
+    Write-Host "  |    $EmojiMicroscope  KBU PC INVENTORY TOOL                         |" -ForegroundColor Cyan
+    Write-Host "  |    Karabuk University IT Department                        |" -ForegroundColor Cyan
+    Write-Host "  |    Version: $Script:ToolVersion                                              |" -ForegroundColor Cyan
+    Write-Host "  |                                                             |" -ForegroundColor Cyan
+    Write-Host "  +=============================================================+" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "  $([char]0x26A0)  This tool is READ-ONLY -- No system modifications are made." -ForegroundColor Yellow
     Write-Host ""
 
     # ---------- Phase 1: Collect All Data ----------

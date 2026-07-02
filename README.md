@@ -127,7 +127,10 @@ Elasticsearch, Power BI, and other automation tools.
 
 ## Testing
 
-30+ Pester tests validate hardware collection, configuration parsing, and JSON structure:
+30+ Pester integration tests validate hardware collection, configuration parsing, and JSON export
+using real CIM queries against the local machine.
+
+See [docs/TESTING.md](docs/TESTING.md) for the full testing strategy.
 
 ```powershell
 # Install Pester if needed
@@ -136,11 +139,6 @@ Install-Module -Name Pester -Force -SkipPublisherCheck
 # Run all tests
 Invoke-Pester -Path .\tests\inventory.tests.ps1
 ```
-
-Test coverage includes:
-- **Configuration:** File existence, valid JSON, required fields, data types
-- **Hardware:** CPU, RAM, disk, OS, motherboard, BIOS collection validity
-- **JSON Export:** Section keys, nested serialization, depth handling
 
 ## Requirements
 

@@ -1344,44 +1344,39 @@ function Build-HtmlReport {
 <#
 .SYNOPSIS
     Exports inventory data as structured JSON for integration with other tools.
+
+.DESCRIPTION
+    Takes a pre-built inventory data object (with metadata, system, cpu, ram,
+    gpu, disk, motherboard, bios, network, battery, security sections) and
+    writes it as a JSON file to the specified output path.
+
+.PARAMETER InventoryData
+    PSCustomObject containing all inventory sections and metadata.
+
+.PARAMETER OutputPath
+    Directory where the JSON file will be written.
+
+.PARAMETER FileName
+    Base filename without extension. ".json" is appended automatically.
 #>
 function Export-InventoryJson {
     param(
-        $SystemInfo,
-        $CPUInfo,
-        $RAMInfo,
-        $GPUList,
-        $DiskList,
-        $Motherboard,
-        $BIOSInfo,
-        $NetworkInfo,
-        $BatteryInfo,
-        $SecurityInfo
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$InventoryData,
+
+        [Parameter(Mandatory = $true)]
+        [string]$OutputPath,
+
+        [Parameter(Mandatory = $true)]
+        [string]$FileName
     )
 
-    $inventoryData = [PSCustomObject]@{
-        metadata = [PSCustomObject]@{
-            tool_version   = $Script:ToolVersion
-            scan_date      = $Script:ScanDate
-            computer_name  = $Script:ComputerName
-            current_user   = $Script:CurrentUser
-        }
-        system = $SystemInfo
-        cpu    = $CPUInfo
-        ram    = $RAMInfo
-        gpu    = $GPUList
-        disk   = $DiskList
-        motherboard = $Motherboard
-        bios   = $BIOSInfo
-        network = $NetworkInfo
-        battery = $BatteryInfo
-        security = $SecurityInfo
-    }
+    $jsonFilePath = Join-Path -Path $OutputPath -ChildPath "$FileName.json"
 
     try {
-        $jsonContent = $inventoryData | ConvertTo-Json -Depth 10
-        $jsonContent | Out-File -FilePath $Script:JsonReportPath -Encoding UTF8 -Force
-        Write-Host "  $([char]0x2713) JSON report saved to $Script:JsonReportPath" -ForegroundColor Green
+        $jsonContent = $InventoryData | ConvertTo-Json -Depth 10
+        $jsonContent | Out-File -FilePath $jsonFilePath -Encoding UTF8 -Force
+        Write-Host "  $([char]0x2713) JSON report saved to $jsonFilePath" -ForegroundColor Green
     }
     catch {
         Write-Host "  [$([char]0x26A0)] WARNING: Could not save JSON report: $($_.Exception.Message)" -ForegroundColor Yellow
@@ -1562,17 +1557,30 @@ function Main {
         -SecurityInfo  $securityInfo
 
     Write-Host "  [$([char]0x2192)] Exporting JSON report..." -ForegroundColor Cyan
+
+    $inventoryData = [PSCustomObject]@{
+        metadata = [PSCustomObject]@{
+            tool_version  = $Script:ToolVersion
+            scan_date     = $Script:ScanDate
+            computer_name = $Script:ComputerName
+            current_user  = $Script:CurrentUser
+        }
+        system      = $systemInfo
+        cpu         = $cpuInfo
+        ram         = $ramInfo
+        gpu         = $gpuList
+        disk        = $diskList
+        motherboard = $motherboard
+        bios        = $biosInfo
+        network     = $networkInfo
+        battery     = $batteryInfo
+        security    = $securityInfo
+    }
+
     Export-InventoryJson `
-        -SystemInfo    $systemInfo `
-        -CPUInfo       $cpuInfo `
-        -RAMInfo       $ramInfo `
-        -GPUList       $gpuList `
-        -DiskList      $diskList `
-        -Motherboard   $motherboard `
-        -BIOSInfo      $biosInfo `
-        -NetworkInfo   $networkInfo `
-        -BatteryInfo   $batteryInfo `
-        -SecurityInfo  $securityInfo
+        -InventoryData $inventoryData `
+        -OutputPath    $Script:OutputPath `
+        -FileName      $Script:ReportFilename
 
     # Save HTML report to disk
     try {

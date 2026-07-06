@@ -1,40 +1,51 @@
 # KBU PC Inventory Tool
 
-A professional PowerShell-based IT inventory application that collects detailed
-system information from Windows 10/11 workstations and generates a beautiful,
-responsive HTML dashboard with live refresh capability and structured JSON export.
+A professional, read-only PowerShell-based IT inventory application for Windows
+10/11 workstations. Collects hardware, OS, network, and security data, then
+generates an interactive HTML dashboard with live refresh and structured JSON
+export.
 
-**Version:** 2.2.0
-**Author:** Karabuk University IT Department
+**Version:** 2.2.0  
+**Author:** Karabuk University IT Department  
 **License:** MIT
+
+---
 
 ## Quick Start
 
-**Double-click `run_inventory.bat`** — that's it.
+**Double-click `run_inventory.bat`** — no setup required.
 
-The tool will:
-1. Collect hardware and system information
-2. Generate an HTML dashboard report
-3. Export a JSON file for automation
-4. Start a local HTTP server with live refresh
-5. Open the dashboard in your default browser
-
-For advanced users:
 ```powershell
+# Or run directly via PowerShell
 .\src\KBU_PC_Inventory.ps1
 ```
 
+The tool will collect data, generate HTML + JSON reports, start a local HTTP
+server, and open the dashboard in your browser.
+
+---
+
 ## Features
 
-- **Hardware Inventory:** CPU (name, cores, threads, clock), RAM (total/available/used, per-module details), GPU (name, VRAM, driver), Storage (capacity, usage %, free space), Motherboard, BIOS
-- **System Information:** OS edition, version, build, architecture, install date, uptime
-- **Network:** Active adapters, IPv4, MAC, gateway, DNS servers, link speed, internet status
-- **Security:** Windows Defender, Firewall profiles, Windows Activation status
-- **Battery:** Charge percentage and power state (laptops)
-- **Live Refresh:** Built-in HTTP server with one-click browser re-scan
-- **Dual Output:** Interactive HTML dashboard + structured JSON export
-- **Configuration:** External `config.json` for paths, ports, and settings
-- **Read-Only:** Zero system modifications
+| Category       | Collected Data                                           |
+|----------------|----------------------------------------------------------|
+| **System**     | OS edition, version, build, architecture, install date, uptime |
+| **CPU**        | Name, manufacturer, cores, threads, max clock, current usage |
+| **RAM**        | Total/available/used, per-module details (capacity, speed) |
+| **GPU**        | Name, VRAM, driver version (dedicated + integrated)      |
+| **Storage**    | Drive letters, capacity, free/used space, usage percent  |
+| **Motherboard**| Manufacturer, model, serial number                       |
+| **BIOS**       | Manufacturer, version, release date                      |
+| **Network**    | Adapters, MAC, IPv4, gateway, DNS, link speed, internet  |
+| **Security**   | Defender, Firewall profiles, Windows Activation          |
+| **Battery**    | Charge percentage, power state (laptops only)            |
+
+- **Live Refresh** — HTTP server with one-click browser re-scan
+- **Dual Output** — HTML dashboard + structured JSON export
+- **Configuration** — External `config.json` for paths, ports, and settings
+- **Read-Only** — Zero system modifications, no admin required
+
+---
 
 ## Project Structure
 
@@ -43,31 +54,50 @@ KBU-PC-Inventory-Tool/
 ├── run_inventory.bat            # Double-click launcher
 ├── config.json                  # Runtime configuration
 ├── CHANGELOG.md                 # Version history
-├── README.md                    # This file
-├── LICENSE                      # MIT License
+├── README.md
+├── LICENSE
 ├── .gitignore
+│
 ├── src/
-│   ├── KBU_PC_Inventory.ps1     # Main entry point (dot-source orchestrator)
-│   ├── Config.ps1               # Configuration loader with safe defaults
-│   ├── Logger.ps1               # Timestamped log output
-│   ├── Collectors.ps1           # Hardware/OS data collection functions
-│   ├── Network.ps1              # Network adapter collection
-│   ├── Security.ps1             # Defender, Firewall, Activation
-│   ├── ReportRenderer.ps1       # HTML dashboard generation
-│   ├── Export.ps1               # JSON export (independently testable)
-│   └── Server.ps1               # HTTP live refresh server
+│   ├── KBU_PC_Inventory.ps1     # Main entry point — dot-sources modules, runs Main()
+│   ├── Config.ps1               # Emoji constants, config.json loading, safe defaults
+│   ├── Logger.ps1               # Timestamped log output (Info/Warning/Error/Success)
+│   ├── Collectors.ps1           # Hardware/OS data collection (10 functions)
+│   ├── Network.ps1              # Network adapter and connectivity information
+│   ├── Security.ps1             # Defender, Firewall, Windows Activation
+│   ├── ReportRenderer.ps1       # HTML dashboard generation (Build-HtmlReport)
+│   ├── Export.ps1               # JSON export — independently testable
+│   └── Server.ps1               # HTTP live refresh server (System.Net.HttpListener)
+│
 ├── docs/
-│   └── architecture.md          # Architecture documentation
+│   ├── architecture.md          # Full architecture breakdown
+│   └── TESTING.md               # Testing strategy and coverage
+│
 ├── tests/
-│   └── inventory.tests.ps1      # Pester test suite
-└── screenshots/                  # UI screenshots
+│   └── inventory.tests.ps1      # 30+ Pester integration tests
+│
+└── screenshots/                  # Dashboard UI screenshots
 ```
 
-## Architecture
+---
 
-`run_inventory.bat` → `src/KBU_PC_Inventory.ps1` → `config.json` → Inventory Collection → Data Processing → HTML Report + JSON Export → Desktop Output
+## Module Architecture
 
-See [docs/architecture.md](docs/architecture.md) for the full layer-by-layer breakdown including the HTTP server, error handling strategy, data collection table, and future integration possibilities.
+```
+run_inventory.bat
+        ↓
+KBU_PC_Inventory.ps1  (dot-sources all modules)
+        ↓
+Config.ps1  →  Collectors.ps1  →  Network.ps1  →  Security.ps1
+        ↓
+ReportRenderer.ps1  +  Export.ps1
+        ↓
+HTML Report  +  JSON Export  +  Server.ps1 (live refresh)
+```
+
+See [docs/architecture.md](docs/architecture.md) for the full layer-by-layer breakdown.
+
+---
 
 ## Configuration
 
@@ -96,27 +126,25 @@ Edit `config.json` to customize behavior:
 | `server.port`              | Starting HTTP port (scans next 9 if busy)      |
 | `server.refresh_interval`  | Reserved for future timer-based refresh        |
 
-If `config.json` is missing or invalid, safe default values are used with a warning.
+If `config.json` is missing or invalid, safe default values are used with a
+warning printed to the console.
+
+---
 
 ## Output Files
 
 Generated in the configured output directory:
 
-| File                         | Purpose                                          |
-|------------------------------|--------------------------------------------------|
-| `KBU_Inventory_Report.html`  | Interactive HTML dashboard with live refresh     |
-| `KBU_Inventory_Report.json`  | Structured machine-readable inventory export     |
+| File                         | Purpose                                        |
+|------------------------------|------------------------------------------------|
+| `KBU_Inventory_Report.html`  | Interactive HTML dashboard with live refresh   |
+| `KBU_Inventory_Report.json`  | Structured machine-readable inventory data     |
 
 ### JSON Export Structure
 
 ```json
 {
-  "metadata": {
-    "tool_version": "2.2.0",
-    "scan_date": "2026-07-01 09:00:00",
-    "computer_name": "DESKTOP-ABC123",
-    "current_user": "ferdi"
-  },
+  "metadata": { "tool_version": "2.2.0", "scan_date": "...", "computer_name": "..." },
   "system": { ... },
   "cpu": { ... },
   "ram": { "modules": [ ... ] },
@@ -130,15 +158,15 @@ Generated in the configured output directory:
 }
 ```
 
-The JSON export enables integration with asset management systems, CMDBs,
+The JSON output enables integration with asset management systems, CMDBs,
 Elasticsearch, Power BI, and other automation tools.
+
+---
 
 ## Testing
 
-30+ Pester integration tests validate hardware collection, configuration parsing, and JSON export
-using real CIM queries against the local machine.
-
-See [docs/TESTING.md](docs/TESTING.md) for the full testing strategy.
+30+ Pester integration tests validate hardware collection, configuration
+parsing, and JSON export using real CIM queries against the local machine.
 
 ```powershell
 # Install Pester if needed
@@ -148,16 +176,24 @@ Install-Module -Name Pester -Force -SkipPublisherCheck
 Invoke-Pester -Path .\tests\inventory.tests.ps1
 ```
 
+See [docs/TESTING.md](docs/TESTING.md) for the full testing strategy.
+
+---
+
 ## Requirements
 
 - Windows 10 or Windows 11
 - PowerShell 5.1 or later (included with Windows)
 - No admin privileges required
 
+---
+
 ## Screenshots
 
-Screenshots of the HTML dashboard are available in the `screenshots/` directory:
-`dashboard.png`, `hardware.png`, `network.png`, `security.png`
+`screenshots/dashboard.png` · `screenshots/hardware.png`  
+`screenshots/network.png` · `screenshots/security.png`
+
+---
 
 ## Future Improvements
 
@@ -166,8 +202,8 @@ Screenshots of the HTML dashboard are available in the `screenshots/` directory:
 - Remote collection agent mode (WinRM)
 - SQLite/PostgreSQL storage backend
 - Scheduled task integration for periodic inventory
-- Email report delivery
-- Fleet-wide aggregation dashboard
+
+---
 
 ## License
 

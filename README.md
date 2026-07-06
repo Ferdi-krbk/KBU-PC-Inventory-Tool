@@ -4,7 +4,7 @@ A professional PowerShell-based IT inventory application that collects detailed
 system information from Windows 10/11 workstations and generates a beautiful,
 responsive HTML dashboard with live refresh capability and structured JSON export.
 
-**Version:** 2.1.0
+**Version:** 2.2.0
 **Author:** Karabuk University IT Department
 **License:** MIT
 
@@ -47,7 +47,15 @@ KBU-PC-Inventory-Tool/
 ├── LICENSE                      # MIT License
 ├── .gitignore
 ├── src/
-│   └── KBU_PC_Inventory.ps1     # Main PowerShell script
+│   ├── KBU_PC_Inventory.ps1     # Main entry point (dot-source orchestrator)
+│   ├── Config.ps1               # Configuration loader with safe defaults
+│   ├── Logger.ps1               # Timestamped log output
+│   ├── Collectors.ps1           # Hardware/OS data collection functions
+│   ├── Network.ps1              # Network adapter collection
+│   ├── Security.ps1             # Defender, Firewall, Activation
+│   ├── ReportRenderer.ps1       # HTML dashboard generation
+│   ├── Export.ps1               # JSON export (independently testable)
+│   └── Server.ps1               # HTTP live refresh server
 ├── docs/
 │   └── architecture.md          # Architecture documentation
 ├── tests/
@@ -67,7 +75,7 @@ Edit `config.json` to customize behavior:
 
 ```json
 {
-  "version": "2.1.0",
+  "version": "2.2.0",
   "report": {
     "output_path": "C:\\Users\\Public\\Desktop",
     "filename": "KBU_Inventory_Report",
@@ -104,7 +112,7 @@ Generated in the configured output directory:
 ```json
 {
   "metadata": {
-    "tool_version": "2.1.0",
+    "tool_version": "2.2.0",
     "scan_date": "2026-07-01 09:00:00",
     "computer_name": "DESKTOP-ABC123",
     "current_user": "ferdi"

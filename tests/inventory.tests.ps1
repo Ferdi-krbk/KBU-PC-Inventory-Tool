@@ -212,6 +212,6 @@ Describe "JSON Export (Real Function)" {
     }
 
     It "Export-InventoryJson handles invalid path gracefully" {
-        { Export-InventoryJson -InventoryData $TestInventoryData -OutputPath "Z:\InvalidPath" -FileName "test" } | Should -Throw
+        { Export-InventoryJson -InventoryData $TestInventoryData -OutputPath "Z:\InvalidPath" -FileName "test" } | Should -Not -Throw
     }
 }

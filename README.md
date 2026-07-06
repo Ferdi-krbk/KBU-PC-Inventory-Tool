@@ -168,3 +168,7 @@ Screenshots of the HTML dashboard are available in the `screenshots/` directory:
 - Scheduled task integration for periodic inventory
 - Email report delivery
 - Fleet-wide aggregation dashboard
+
+## License
+
+MIT License — See [LICENSE](LICENSE) for details.

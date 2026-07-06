@@ -5,14 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [2.1.0] - 2026-07-01
+## [2.2.0] - 2026-07-06
+
+### Added
+- **Modular architecture** — monolithic script split into 9 focused modules:
+  `Config.ps1`, `Logger.ps1`, `Collectors.ps1`, `Network.ps1`, `Security.ps1`,
+  `ReportRenderer.ps1`, `Export.ps1`, `Server.ps1`, `KBU_PC_Inventory.ps1`
+- `Logger.ps1` — timestamped log output with Info/Warning/Error/Success levels
+- Module-level architecture diagram in README
+
+### Changed
+- `Export-InventoryJson` refactored with explicit `-InventoryData`, `-OutputPath`, `-FileName` parameters for independent testability
+- Main script reduced to entry point — dot-sources modules and orchestrates phases
+- Pester tests dot-source real modules instead of defining test-only copies
+- Test output uses `$env:TEMP` instead of Desktop
+
+### Preserved
+- HTML dashboard, live refresh, JSON export, `config.json` — all unchanged
+- `run_inventory.bat` launcher works identically
+
+## [2.1.0] - 2026-07-02
 
 ### Added
 - `run_inventory.bat` — double-click batch launcher for non-technical users
 - `config.json` — externalized runtime configuration (output path, port, filename, auto-open)
 - JSON export (`Export-InventoryJson`) — structured machine-readable output alongside HTML
-- Pester test suite — 30+ tests covering config parsing, hardware collection, and JSON structure
+- Pester test suite — 30+ integration tests with live CIM data
 - Architecture documentation — detailed layer breakdown in `docs/architecture.md`
+- TESTING.md — testing strategy documentation
+- CHANGELOG.md — Keep a Changelog format
 
 ### Changed
 - Main script moved into `src/KBU_PC_Inventory.ps1` for clean project structure
@@ -23,8 +44,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 - Variable reference `$sec` corrected to `$securityInfo` in main execution flow
-- Removed duplicate `Build-HtmlReport` invocation that generated the report twice
+- Removed duplicate `Build-HtmlReport` invocation
 - Phase 4 browser launch now respects `auto_open` configuration
+- Broken ASCII art header replaced with clean box layout
 
 ## [2.0.0] - 2026-06-28
 
